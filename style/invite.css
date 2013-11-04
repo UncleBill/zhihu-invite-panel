@@ -1,0 +1,61 @@
+.container{
+    width: 960px;
+    margin: 20px auto;
+    padding: 20px 10px;
+    border: 1px solid #ccc;
+    border-radius:5px;
+}
+.search {
+    height: 30px;
+}
+.invite-status{
+    line-height: 30px;
+}
+
+.title{
+    font-weight: normal;
+    margin-bottom: 5px;
+}
+.invite-item-con-inner{
+    width:900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.invite-item{
+    width: 425px;
+    margin: 10px;
+    padding: 15px 0;
+    float: left;
+    position: relative;
+    border: 1px solid #eee;
+    border-radius:5px;
+}
+.invite-item:hover,
+.invite-item:focus{
+    border-radius:5px;
+    border: 1px solid #ddf;
+}
+.avatar{
+    height: 50px;
+    width: 50px;
+    margin-left: 10px;
+    margin-right: 10px;
+    float: left;
+}
+.profile{
+    float: left;
+    font-size: 14px;
+}
+.profile p{
+    margin: 0;
+}
+.profile-bio{
+    font-weight: bold;
+}
+.invite-btn{
+    font-size: 14px;
+    font-weight: bold;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+}

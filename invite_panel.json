@@ -1,0 +1,56 @@
+{
+  "comment": "http://octodex.github.com/",
+  "invited": [
+    {
+      "fullName": "the Mardigrastocat",
+      "urlToken": "mardigrastocat",
+      "avatarPath": "./images/Mardigrastocat.png",
+      "bio": "Octodex",
+      "id": 1
+    },
+    {
+      "fullName": "the Kimonotocat",
+      "urlToken": "kimonotocat",
+      "avatarPath": "./images/kimonotocat.png",
+      "bio": "Octodex",
+      "id": 2
+    },
+    {
+      "fullName": "the Skitchtocat",
+      "urlToken": "skitchtocat",
+      "avatarPath": "./images/skitchtocat.png",
+      "bio": "Octodex",
+      "id": 3
+    }
+  ],
+  "recommended": [
+    {
+      "fullName": "the Droidtocat",
+      "urlToken": "droidtocat",
+      "avatarPath": "./images/droidtocat.png",
+      "bio": "Octodex",
+      "id": 4
+    },
+    {
+      "fullName": "the Goretocat",
+      "urlToken": "goretocat",
+      "avatarPath": "./images/goretocat.png",
+      "bio": "Octodex",
+      "id": 5
+    },
+    {
+      "fullName": "the FIRSTocat",
+      "urlToken": "firstocat",
+      "avatarPath": "./images/FIRSTocat.png",
+      "bio": "Octodex",
+      "id": 6
+    },
+    {
+      "fullName": "the Professortocat",
+      "urlToken": "professortocat",
+      "avatarPath": "./images/Professortocat_v2.png",
+      "bio": "Octodex",
+      "id": 7
+    }
+  ]
+}
