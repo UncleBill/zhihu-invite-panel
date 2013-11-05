@@ -15,7 +15,7 @@
                 <div class='span3'>
                     <input class="form-control search" type="text" placeholder="搜索你想邀请到人">
                 </div>
-                <div class="span invite-status">
+                <div class="span invite-status" id="invite-status">
                     您已经邀请
                     <a href="#">the Droidtocat</a>、
                     <a href="#">the Mardigrastocat</a>
@@ -39,7 +39,7 @@
             </div>
         </div>
         <div id="confirmer" class="confirmer">
-            <p>收回对<%= userName %>的邀请？</p>
+            <p>收回对{{ userName }}的邀请？</p>
             <div class="confirm-btn btn btn-primary btn-small">确认</div>
         </div>
         <div class="mask"></div>

@@ -77,13 +77,21 @@ xhr.onreadystatechange = function () {
                            .replace(/{{ urlToken }}/g, urlToken)
             invitedUserArray.push( aTagStr );
         }
+        var invitedUserNames = invitedUsers.map(function(e){
+            return e.urlToken;
+        })
         statusTag.innerHTML = "您已经邀请" + invitedUserArray.join("、") + "等" + invitedUserArray.length + "人";
+        statusTag.setAttribute('data-invited-users', invitedUserNames.join(';'))
+        if (!invitedUsers.length) {
+            statusTag.innerHTML = "您还没要邀请任何人"
+        }
         
 
         // run main function
         main();
     }
 }
+// send request
 xhr.send();
 
 var main = function() {
@@ -115,8 +123,8 @@ var main = function() {
     // handle retrieve invitation
     // ----------------------------------------
     $('.invite-item-con').on( 'click', '.retrieve-invitation', function(){
-            console.log('click retrieve invitational');
-            console.log(this);
+            // console.log('click retrieve invitational');
+            // console.log(this);
             // $(this).data('user-name')
             // change button's style
             if (showConfirm(this)){
@@ -126,7 +134,7 @@ var main = function() {
 
     var showConfirm = function (elem) {
         var userName = $(elem).parent('.invite-item').data('user-name');
-        console.log('elem bind data',elem);
+        // console.log('elem bind data',elem);
         $mask.fadeIn();
         $confirmer
                 .find('p')
@@ -148,6 +156,9 @@ var main = function() {
             .removeClass('btn-inverse retrieve-invitation')
             .addClass('send-invitation');
 
+            // update status
+            inviteStatus.remove(userName);
+
             // notification show up
             $('.notification')
                 .text("已收回对" + userName + "的邀请！")
@@ -161,12 +172,28 @@ var main = function() {
 
     // send invitation
     // ----------------------------------------
-    $(".send-invitation").each(function () {
-        $(this).click(function () {
-            // 自定义的api
-            $(this).removeClass('send-invitation').addClass('btn-inverse retrieve-invitation');
-        });
-    });
+    $('.invite-item-con').on('click', '.send-invitation', function(){
+        // toggle className
+        var that = this;
+        console.log(this, 'clicking sending button');
+        $(this).text("收回邀请")
+            .removeClass('send-invitation')
+            .addClass('btn-inverse retrieve-invitation')
+            .queue();
+            (function(){
+                    // show notification
+                    console.log('sending');
+                    var userName = $(that).parent('.invite-item').data('user-name');
+                    console.log(userName);
+                    inviteStatus.add(userName);
+                    $('.notification')
+                .text("已向" + userName + "发送邀请！")
+                .animate({top:'5px'}, 500)
+                .delay(1500)
+                .animate({top:'-50px'}, 300);
+
+            }()); // closure
+    })
 
     // handle notification
     $("notification").hover(function () {
@@ -178,4 +205,56 @@ var main = function() {
             .stop()
             .animate({top:'-50px'}, 300);
     })
+
+    // invitation status; namespace
+    var inviteStatus = {}
+    inviteStatus.tag = function () {
+        return document.getElementById('invite-status');
+    }
+
+    inviteStatus.updateData = function (datastr) {
+        var invitedUserArray = [];
+        this.tag().setAttribute('data-invited-users', datastr)
+        var names = inviteStatus.getUserList();
+        if (!names.length) {
+            statusTag.innerHTML = "您还没要邀请任何人"
+        }
+        for (var i = 0, len = names.length; i < len; ++i) {
+            var urlToken = names[i];
+            var aTagStr = ("<a href='/people/{{ urlToken }}' data-user-name='{{ urlToken }}'>{{ urlToken }}</a>")
+                .replace(/{{ urlToken }}/g, urlToken)
+                invitedUserArray.push( aTagStr );
+        }
+        statusTag.innerHTML = "您已经邀请" + invitedUserArray.join("、") + "等" + invitedUserArray.length + "人";
+    }
+
+    inviteStatus.getUserList = function () {
+        var data = this.tag().getAttribute('data-invited-users') || "";
+        if (data && data.trim()) {
+            return data.split(';');
+        }
+        return [];
+    }
+
+    inviteStatus.add = function (name) {
+        console.log('will add', name);
+        var list = this.getUserList();
+        console.log('before adding', list);
+        if ( list.indexOf(name) == -1  ) {
+            console.log('not include');
+            list.push( name );
+        }
+        console.log('added', list);
+        this.updateData( list.join(';') )
+    }
+
+    inviteStatus.remove = function (name) {
+        var list = this.getUserList();
+        console.log(list);
+        var index = list.indexOf( name );
+        // remove list[index]
+        list = list.splice(0,index).concat( list.splice(index + 1) );
+        // console.log('removed', list);
+        this.updateData( list.join(';') )
+    }
 };
