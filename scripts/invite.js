@@ -1,21 +1,21 @@
-var htmlTemp = "<div class='invite-item'> <div class='avatar'> <a href='/people/<%= urlToken %>'> <img height='50' width='50' src='<%= avatarPath %>' alt='<%= fullName %>'> </a> </div> <div class='profile'> <p> <a href='#' class='profile-name'><%= fullName %></a> </p> <p class='profile-bio'><%= bio %></p> </div> <div class='invite-btn send-invite btn btn-primary btn-mini <%= inviteClass %>'><%= inviteText %></div></div>";
+var htmlTemp = "<div class='invite-item' data-user-name='{{ urlToken }}'> <div class='avatar'> <a href='/people/{{ urlToken }}'> <img height='50' width='50' src='{{ avatarPath }}' alt='{{ fullName }}'> </a> </div> <div class='profile'> <p> <a href='#' class='profile-name'>{{ fullName }}</a> </p> <p class='profile-bio'>{{ bio }}</p> </div> <div class='invite-btn send-invite btn btn-primary btn-mini {{ inviteClass }}'>{{ inviteText }}</div></div>";
 
 // htmlTemp =>
 // ------------------------------------------------------------
 // 
 // <div class="invite-item">
 //     <div class="avatar">
-//         <a href="/people/<%= urlToken %>">
-//             <img height="50" width="50" src="<%= avatarpath %>" alt="<%= fullName %>">
+//         <a href="/people/{{ urlToken }}">
+//             <img height="50" width="50" src="{{ avatarpath }}" alt="{{ fullName }}">
 //         </a>
 //     </div>
 //     <div class='profile'>
 //         <p>
-//             <a href="#" class="profile-name"><%= fullName %></a>
+//             <a href="#" class="profile-name">{{ fullName }}</a>
 //         </p>
-//         <p class="profile-bio"><%= bio %></p>
+//         <p class="profile-bio">{{ bio }}</p>
 //     </div>
-//     <div class="invite-btn send-invite btn btn-primary btn-mini <%= isInvited %>">邀请回答</div>
+//     <div class="invite-btn send-invite btn btn-primary btn-mini {{ isInvited }}">邀请回答</div>
 // </div>
 //
 // ------------------------------------------------------------
@@ -62,7 +62,7 @@ xhr.onreadystatechange = function () {
             // 生成innerHTML
             for (var key in user) {
                 // console.log(key);
-                htmlCode = htmlCode.replace((new RegExp("<%= " + key + " %>", "g")), user[key]);
+                htmlCode = htmlCode.replace((new RegExp("{{ " + key + " }}", "g")), user[key]);
             }
             frag.innerHTML = frag.innerHTML + htmlCode;
         }
@@ -72,46 +72,110 @@ xhr.onreadystatechange = function () {
         // update status
         var invitedUserArray = [];
         for (var i = 0, len = invitedUsers.length; i < len; ++i) {
-            var aTagStr = "<a href='/people/" + invitedUsers[i].urlToken + "'>"
-                            + invitedUsers[i].fullName 
-                            + "</a>";
+            var urlToken = invitedUsers[i].urlToken;
+            var aTagStr = ("<a href='/people/{{ urlToken }}' data-user-name='{{ urlToken }}'>{{ urlToken }}</a>")
+                           .replace(/{{ urlToken }}/g, urlToken)
             invitedUserArray.push( aTagStr );
         }
         statusTag.innerHTML = "您已经邀请" + invitedUserArray.join("、") + "等" + invitedUserArray.length + "人";
+        
+
+        // run main function
+        main();
     }
 }
 xhr.send();
 
-var invitedTags = $('.retrieve-invitation');
-invitedTags.each(function () {
-    $(this).click(function () {
-        showConfirm();
-    })
-})
+var main = function() {
+    var $mask = $(".mask");
+    var $confirmer = $(".confirmer");
 
-var showConfirm = function () {
-    $(".confirm-modoule").show();
-}
+    var hideConfirm = function( callback ) {
+        $mask.fadeOut();
+        $confirmer.fadeOut(function () {
+            // run callback if given
+            if (callback) {
+                callback();
+            }
+        });
+    };
 
-// 收回邀请
-$(".confirm-modoule .confirm-btn").bind("click", function () {
-    var userName = $(this).data('userName')
-    // 自定义的api
-    $.post('/api/retrieve-invitation?from=' + operateUser + '&to' + userName).success(function () {
+    var showConfirm = function(elem) {
+        $mask.fadeIn();
+        // 通过 @elem将用户名传递进来
+        $confirmer
+            .data('user-name', $(elem).data('user-name'))
+            .fadeIn()
+    };
 
-        $('.notification').text("已收回对" + userName + "的邀请！").fadeIn().delay(1000).fadeOut();
-        $(this).removeClass('btn-inverse retrieve-invitation').addClass('send-invitation');
-    }).error(function () {
-        $('.notification').text('发生错误！').fadeIn().delay(1500).fadeOut();
+    $mask.bind('click', function () {
+        hideConfirm();
     });
-});
 
-// 邀请回答
-$(".send-invitation").each(function () {
-    $(this).click(function () {
-        // 自定义的api
-        $.post('/api/send-invitation/?from=' + operateUser + '&to=' + $(this).data('user'), function () {
-            $(this).removeClass('not-invited').addClass('btn-inverse invited-user');
+    // handle retrieve invitation
+    // ----------------------------------------
+    $('.invite-item-con').on( 'click', '.retrieve-invitation', function(){
+            console.log('click retrieve invitational');
+            console.log(this);
+            // $(this).data('user-name')
+            // change button's style
+            if (showConfirm(this)){
+                $(this).removeClass('btn-inverse retrieve-invitation').addClass('send-invitation');
+            }
+    });
+
+    var showConfirm = function (elem) {
+        var userName = $(elem).parent('.invite-item').data('user-name');
+        console.log('elem bind data',elem);
+        $mask.fadeIn();
+        $confirmer
+                .find('p')
+                .html('确认收回对<a href="/people/' + userName + '">' + userName + '</a>' + '的邀请吗？')
+            .end()
+                .find('.confirm-btn').data('user-name', userName)
+            .end()
+            .fadeIn();
+    }
+
+    // confirm
+    $(".confirmer .confirm-btn").bind("click", function () {
+        var userName = $(this).data('user-name')
+        hideConfirm(function () {
+            // change style
+            $(".invite-item-con .invite-item[data-user-name='" + userName+ "']")
+            .find('.btn')
+            .text('邀请回答')
+            .removeClass('btn-inverse retrieve-invitation')
+            .addClass('send-invitation');
+
+            // notification show up
+            $('.notification')
+                .text("已收回对" + userName + "的邀请！")
+                .animate({top:'5px'}, 500)
+                .delay(1500)
+                .animate({top:'-50px'}, 300);
+        })
+
+    });
+
+
+    // send invitation
+    // ----------------------------------------
+    $(".send-invitation").each(function () {
+        $(this).click(function () {
+            // 自定义的api
+            $(this).removeClass('send-invitation').addClass('btn-inverse retrieve-invitation');
         });
     });
-});
+
+    // handle notification
+    $("notification").hover(function () {
+        $(this)
+            .stop()
+            .animate({top:'5px'}, 500);
+    },function () {
+        $(this)
+            .stop()
+            .animate({top:'-50px'}, 300);
+    })
+};

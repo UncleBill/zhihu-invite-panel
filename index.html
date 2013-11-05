@@ -27,10 +27,23 @@
             <div class="invite-item-con">
             </div>
         </div>
-        <script src="./scripts/invite.js" type="text/javascript" charset="utf-8"></script>
-        <div id="confirm-modoule" class="confirm-modoule">
-            <p>收回对@userName的邀请？</p>
-            <div class="confirm-btn">确认</div>
+        <div class="modal fade">
+            <div class="modal-header"><button>&times</button></div>
+            <h3>收回邀请</h3>
+            <div class="modal-body">
+                <p>确认收回邀请吗？</p>
+            </div>
+            <div class="modal-footer">
+                <a class="btn" href="#">取消</a>
+                <a class="btn btn-primary" href="#">确认</a>
+            </div>
         </div>
+        <div id="confirmer" class="confirmer">
+            <p>收回对<%= userName %>的邀请？</p>
+            <div class="confirm-btn btn btn-primary btn-small">确认</div>
+        </div>
+        <div class="mask"></div>
+        <div class="notification btn-warning"></div>
+        <script src="./scripts/invite.js" type="text/javascript" charset="utf-8"></script>
     </body>
 </html>
