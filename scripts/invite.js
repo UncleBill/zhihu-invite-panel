@@ -24,9 +24,85 @@ var statusTag = document.getElementsByClassName('invite-status')[0];
 var inviteItemCon = document.getElementsByClassName("invite-item-con")[0];
 var frag = document.createElement('div');
 
+var allUsers;
+
 frag.className = 'invite-item-con-inner'
 frag.innerHTML = "";
 
+var isArray = Array.isArray || function () {
+    return Object.prototype.toString.call(obj) === "[object array]";
+}
+
+// invitation status
+var InviteStatus = function () {
+    this.tag = document.getElementById('invite-status');
+    return this;
+}
+
+InviteStatus.prototype.updateData = function (datastr) {
+    var invitedUserArray = [];
+    if (isArray(datastr)) {
+        this.tag.setAttribute('data-invited-users', datastr.join(';'));
+    } else {
+        this.tag.setAttribute('data-invited-users', datastr)
+    }
+    var names = inviteStatus.getUserList();
+    if ( !names.length ) {
+        statusTag.innerHTML = "您还没要邀请任何人"
+            return
+    }
+    for (var i = 0, len = names.length; i < len; ++i) {
+        var urlToken = names[i];
+        for (var j = 0; j < allUsers.length; ++j) {
+            if (allUsers[j].urlToken == urlToken) {
+                fullName = allUsers[j].fullName;
+                break;
+            }
+        }
+        var aTagStr = ("<a href='/people/{{ urlToken }}' data-user-name='{{ urlToken }}'>{{ fullName }}</a>")
+            .replace(/{{ urlToken }}/g, urlToken).replace("{{ fullName }}", fullName)
+            invitedUserArray.push( aTagStr );
+    }
+    statusTag.innerHTML = "您已经邀请" + invitedUserArray.join("、") + "等" + invitedUserArray.length + "人";
+}
+
+InviteStatus.prototype.getUserList = function () {
+    var data = this.tag.getAttribute('data-invited-users') || "";
+    if (data && data.trim()) {
+        return data.split(';');
+    }
+    return [];
+}
+
+InviteStatus.prototype.add = function (name) {
+    if ( isArray(name) ) {
+        this.prototype.add.call(this, name);
+        return;
+    }
+    // console.log('will add', name);
+    var list = this.getUserList();
+    // console.log('before adding', list);
+    if ( list.indexOf(name) == -1  ) {
+        // console.log('not include');
+        list.push( name );
+    }
+    // console.log('added', list);
+    this.updateData( list )
+}
+
+InviteStatus.prototype.remove = function (name) {
+    var list = this.getUserList();
+    console.log('before remove', list);
+    var index = list.indexOf( name );
+    // remove list[index]
+    list = list.splice(0,index).concat( list.splice(index + 1) );
+    console.log('removed', list);
+    this.updateData( list )
+}
+
+var inviteStatus = new InviteStatus();
+
+// request invite_panel.json and handle it
 var xhr = new XMLHttpRequest();
 xhr.open('GET', '/invite_panel.json');
 
@@ -44,7 +120,7 @@ xhr.onreadystatechange = function () {
             invitedUsers[i].isInvited = true;
         }
 
-        var allUsers = invitedUsers.concat( recommendedUsers );
+        allUsers = invitedUsers.concat( recommendedUsers );
         // console.log(allUsers);
 
         for (var i = 0, len = allUsers.length; i < len; ++i) {
@@ -59,7 +135,7 @@ xhr.onreadystatechange = function () {
             }
             var htmlCode = htmlTemp;
 
-            // 生成innerHTML
+            // generate innerHTML
             for (var key in user) {
                 // console.log(key);
                 htmlCode = htmlCode.replace((new RegExp("{{ " + key + " }}", "g")), user[key]);
@@ -70,25 +146,23 @@ xhr.onreadystatechange = function () {
         inviteItemCon.appendChild( frag );
 
         // update status
-        var invitedUserArray = [];
-        for (var i = 0, len = invitedUsers.length; i < len; ++i) {
-            var urlToken = invitedUsers[i].urlToken;
-            var aTagStr = ("<a href='/people/{{ urlToken }}' data-user-name='{{ urlToken }}'>{{ urlToken }}</a>")
-                           .replace(/{{ urlToken }}/g, urlToken)
-            invitedUserArray.push( aTagStr );
-        }
+        // var invitedUserArray = [];
+        // for (var i = 0, len = invitedUsers.length; i < len; ++i) {
+        //     var urlToken = invitedUsers[i].urlToken;
+        //     var aTagStr = ("<a href='/people/{{ urlToken }}' data-user-name='{{ urlToken }}'>{{ urlToken }}</a>")
+        //                    .replace(/{{ urlToken }}/g, urlToken)
+        //     invitedUserArray.push( aTagStr );
+        // }
         var invitedUserNames = invitedUsers.map(function(e){
             return e.urlToken;
         })
-        statusTag.innerHTML = "您已经邀请" + invitedUserArray.join("、") + "等" + invitedUserArray.length + "人";
-        statusTag.setAttribute('data-invited-users', invitedUserNames.join(';'))
-        if (!invitedUsers.length) {
-            statusTag.innerHTML = "您还没要邀请任何人"
-        }
+        inviteStatus.updateData(invitedUserNames);
+        // statusTag.innerHTML = "您已经邀请" + invitedUserArray.join("、") + "等" + invitedUserArray.length + "人";
+        // statusTag.setAttribute('data-invited-users', invitedUserNames.join(';'))
+        // if (!invitedUsers.length) {
+        //     statusTag.innerHTML = "您还没要邀请任何人"
+        // }
         
-
-        // run main function
-        main();
     }
 }
 // send request
@@ -107,6 +181,7 @@ var main = function() {
             }
         });
     };
+
 
     var showConfirm = function(elem) {
         $mask.fadeIn();
@@ -205,56 +280,7 @@ var main = function() {
             .stop()
             .animate({top:'-50px'}, 300);
     })
-
-    // invitation status; namespace
-    var inviteStatus = {}
-    inviteStatus.tag = function () {
-        return document.getElementById('invite-status');
-    }
-
-    inviteStatus.updateData = function (datastr) {
-        var invitedUserArray = [];
-        this.tag().setAttribute('data-invited-users', datastr)
-        var names = inviteStatus.getUserList();
-        if (!names.length) {
-            statusTag.innerHTML = "您还没要邀请任何人"
-        }
-        for (var i = 0, len = names.length; i < len; ++i) {
-            var urlToken = names[i];
-            var aTagStr = ("<a href='/people/{{ urlToken }}' data-user-name='{{ urlToken }}'>{{ urlToken }}</a>")
-                .replace(/{{ urlToken }}/g, urlToken)
-                invitedUserArray.push( aTagStr );
-        }
-        statusTag.innerHTML = "您已经邀请" + invitedUserArray.join("、") + "等" + invitedUserArray.length + "人";
-    }
-
-    inviteStatus.getUserList = function () {
-        var data = this.tag().getAttribute('data-invited-users') || "";
-        if (data && data.trim()) {
-            return data.split(';');
-        }
-        return [];
-    }
-
-    inviteStatus.add = function (name) {
-        console.log('will add', name);
-        var list = this.getUserList();
-        console.log('before adding', list);
-        if ( list.indexOf(name) == -1  ) {
-            console.log('not include');
-            list.push( name );
-        }
-        console.log('added', list);
-        this.updateData( list.join(';') )
-    }
-
-    inviteStatus.remove = function (name) {
-        var list = this.getUserList();
-        console.log(list);
-        var index = list.indexOf( name );
-        // remove list[index]
-        list = list.splice(0,index).concat( list.splice(index + 1) );
-        // console.log('removed', list);
-        this.updateData( list.join(';') )
-    }
 };
+
+// invoke main function
+main();
