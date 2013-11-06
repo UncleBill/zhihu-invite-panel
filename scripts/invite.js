@@ -1,5 +1,10 @@
 var htmlTemp = "<div class='invite-item' data-user-name='{{ urlToken }}'> <div class='avatar'> <a href='/people/{{ urlToken }}'> <img height='50' width='50' src='{{ avatarPath }}' alt='{{ fullName }}'> </a> </div> <div class='profile'> <p> <a href='#' class='profile-name'>{{ fullName }}</a> </p> <p class='profile-bio'>{{ bio }}</p> </div> <div class='invite-btn send-invite btn btn-primary btn-mini {{ inviteClass }}'>{{ inviteText }}</div></div>";
 
+
+var log = function(){
+    var str = Array.prototype.join.call(arguments,' -  ');
+    $('.debugger').append((new Date).toLocaleString() + ": " + str + "<br />");
+}
 // htmlTemp =>
 // ------------------------------------------------------------
 // 
@@ -25,8 +30,36 @@ var INVITE_BTN_CLASS = "send-invitation",
     RETRIEVE_BTN_CN = 'btn-inverse retrieve-invitation',
     MAX_SHOWEN_NUM = 5;         // show the first 5 people
 
-var statusTag = document.getElementsByClassName('invite-status')[0];
-var inviteItemCon = document.getElementsByClassName("invite-item-con")[0];
+var getByClass = function (cn) {
+    if (document.getElementsByClassName) {
+        return document.getElementsByClassName(cn);
+    } else {
+        var tags = document.getElementsByTagName("*"),
+            regexp = new RegExp("(^|\\W)" + cn + "(\\W|$)"),
+            reslut = [];
+        for (var i = 0, len = tags.length; i < len; ++i) {
+            if (regexp.test(tags[i].className)) {
+                reslut.push( tags[i] );
+            }
+        }
+        return reslut;
+    }
+}
+
+Array.prototype.indexOf = Array.prototype.indexOf || function (value) {
+    for (var i = 0; i < this.length; ++i) {
+        if (this[i] == value) {
+            return i;
+        }
+    }
+}
+
+String.prototype.trim = Array.prototype.trim || function () {
+    return this.replace(/(^\s*|\s*$)/g, '');
+}
+
+var statusTag = getByClass('invite-status')[0];
+var inviteItemCon = getByClass("invite-item-con")[0];
 var $notif = function () {
     return $("<div class='notification btn-warning' />").appendTo($('body'));
 }
@@ -37,19 +70,20 @@ var allUsers;
 frag.className = 'invite-item-con-inner'
 frag.innerHTML = "";
 
-var isArray = Array.isArray || function () {
+var isArray = Array.isArray || $.isArray || function (obj) {
     return Object.prototype.toString.call(obj) === "[object array]";
 }
 
 // invitation status
 var InviteStatus = function () {
     this.tag = document.getElementById('invite-status');
-    // return this;
+    return this;
 }
 
 InviteStatus.prototype.updateData = function (data) {
     var aTags = [];
     var names;
+    log('in updateData function:', 'data', data);
     if (isArray(data)) {
         this.setAttr(data.join(';'));
         names = data;
@@ -58,7 +92,8 @@ InviteStatus.prototype.updateData = function (data) {
         this.setAttr(data);
         names = data.split(';');
     }
-    if ( !names.length ) {
+    log('in updateData function', 'names', names)
+    if ( names.length == 0 ) {
         statusTag.innerHTML = "您还没要邀请任何人！";
         return;
     }
@@ -77,17 +112,22 @@ InviteStatus.prototype.updateData = function (data) {
             aTags.push( aTagStr );
     }
     statusTag.innerHTML = "您已经邀请" + aTags.join("、") + "等" + names.length + "人";
+    // alert('end of updateData function')
 }
 
 InviteStatus.prototype.getUserList = function () {
-    var data = this.tag.getAttribute('data-invited-users') || "";
-    if (data && data.trim()) {
+    log('in get-user-list function')
+    var data = this.tag.getAttribute('data-invited-users');
+    log('get user list', data)
+    if (data) {
         return data.split(';');
     }
+    log('out get-user-list function')
     return [];
 }
 
 InviteStatus.prototype.setAttr = function (datastr) {
+    // alert('setAttr, str:'+ datastr +'<');
     this.tag.setAttribute('data-invited-users', datastr)
 }
 
@@ -108,13 +148,19 @@ InviteStatus.prototype.add = function (name) {
 }
 
 InviteStatus.prototype.remove = function (name) {
+    log('in remove function<<<');
+    log('name', name)
     var list = this.getUserList();
     // console.log('before remove', list);
+    log('list before remove', list.join(';'))
     var index = list.indexOf( name );
+    // alert('index' + index)
     // remove list[index]
     list = list.splice(0,index).concat( list.splice(index + 1) );
+    log('list ', list);
     // console.log('removed', list);
     this.updateData( list )
+    log('out remove function>>>')
 }
 
 var getUserFullName = function (urlToken) {
@@ -122,7 +168,7 @@ var getUserFullName = function (urlToken) {
     for (var i = 0, len = allUsers.length; i < len; ++i) {
         // console.log('user', i+1, allUsers[i].urlToken, '==>', urlToken);
         if (allUsers[i].urlToken == urlToken) {
-            console.log('find', allUsers[i]);
+            // console.log('find', allUsers[i]);
             return allUsers[i].fullName;
         }
     }
@@ -145,7 +191,8 @@ xhr.onreadystatechange = function () {
     if ( xhr.readyState === 4 && xhr.status === 200 ) {
         inviteItemCon.innerHTML = ""
         var json = xhr.responseText;
-        var data = JSON.parse(json);
+        // var data = JSON.parse(json);
+        var data = jQuery.parseJSON(json);
         // console.log(data);
 
         var invitedUsers = data.invited;
@@ -179,9 +226,10 @@ xhr.onreadystatechange = function () {
 
         inviteItemCon.appendChild( frag );
 
-        var invitedUserNames = invitedUsers.map(function(e){
+        var invitedUserNames = $.map(invitedUsers, function(e){
             return e.urlToken;
         })
+        // alert('invitedUserNames'+invitedUserNames.join(';') + '<')
         inviteStatus.updateData(invitedUserNames);
         
     }
@@ -207,7 +255,7 @@ var main = function() {
     var showConfirm = function(elem) {
         $mask.fadeIn();
         $confirmer
-            .data('user-name', $(elem).data('user-name'))
+            .attr('data-user-name', $(elem).attr('data-user-name'))
             .fadeIn()
     };
 
@@ -255,6 +303,7 @@ var main = function() {
             .addClass(INVITE_BTN_CLASS);
 
             // update status
+            // alert(urlToken);
             inviteStatus.remove(urlToken);
 
             // notification show up
@@ -312,3 +361,8 @@ var main = function() {
 
 // invoke main function
 main();
+$(".debugger").on("click", function () {
+    // log($('#invite-status').attr('data-invited-users'));
+    var str = document.getElementById('invite-status').getAttribute('data-invited-users');
+    log(str)
+})
