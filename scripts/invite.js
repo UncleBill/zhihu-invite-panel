@@ -20,8 +20,16 @@ var htmlTemp = "<div class='invite-item' data-user-name='{{ urlToken }}'> <div c
 //
 // ------------------------------------------------------------
 
+// static variable
+var INVITE_BTN_CLASS = "send-invitation",
+    RETRIEVE_BTN_CN = 'btn-inverse retrieve-invitation',
+    MAX_SHOWEN_NUM = 5;         // show the first 5 people
+
 var statusTag = document.getElementsByClassName('invite-status')[0];
 var inviteItemCon = document.getElementsByClassName("invite-item-con")[0];
+var $notif = function () {
+    return $("<div class='notification btn-warning' />").appendTo($('body'));
+}
 var frag = document.createElement('div');
 
 var allUsers;
@@ -36,34 +44,39 @@ var isArray = Array.isArray || function () {
 // invitation status
 var InviteStatus = function () {
     this.tag = document.getElementById('invite-status');
-    return this;
+    // return this;
 }
 
-InviteStatus.prototype.updateData = function (datastr) {
-    var invitedUserArray = [];
-    if (isArray(datastr)) {
-        this.tag.setAttribute('data-invited-users', datastr.join(';'));
+InviteStatus.prototype.updateData = function (data) {
+    var aTags = [];
+    var names;
+    if (isArray(data)) {
+        this.setAttr(data.join(';'));
+        names = data;
     } else {
-        this.tag.setAttribute('data-invited-users', datastr)
+        // string
+        this.setAttr(data);
+        names = data.split(';');
     }
-    var names = inviteStatus.getUserList();
     if ( !names.length ) {
-        statusTag.innerHTML = "您还没要邀请任何人"
-            return
+        statusTag.innerHTML = "您还没要邀请任何人！";
+        return;
     }
-    for (var i = 0, len = names.length; i < len; ++i) {
+    var len = Math.min( names.length, MAX_SHOWEN_NUM );
+    for (var i = 0; i < len; ++i) {
         var urlToken = names[i];
         for (var j = 0; j < allUsers.length; ++j) {
-            if (allUsers[j].urlToken == urlToken) {
+            if (allUsers[j].urlToken === urlToken) {
                 fullName = allUsers[j].fullName;
                 break;
             }
         }
         var aTagStr = ("<a href='/people/{{ urlToken }}' data-user-name='{{ urlToken }}'>{{ fullName }}</a>")
-            .replace(/{{ urlToken }}/g, urlToken).replace("{{ fullName }}", fullName)
-            invitedUserArray.push( aTagStr );
+            .replace("{{ urlToken }}", urlToken, 'g')
+            .replace("{{ fullName }}", fullName, 'g')
+            aTags.push( aTagStr );
     }
-    statusTag.innerHTML = "您已经邀请" + invitedUserArray.join("、") + "等" + invitedUserArray.length + "人";
+    statusTag.innerHTML = "您已经邀请" + aTags.join("、") + "等" + names.length + "人";
 }
 
 InviteStatus.prototype.getUserList = function () {
@@ -74,12 +87,16 @@ InviteStatus.prototype.getUserList = function () {
     return [];
 }
 
+InviteStatus.prototype.setAttr = function (datastr) {
+    this.tag.setAttribute('data-invited-users', datastr)
+}
+
 InviteStatus.prototype.add = function (name) {
     if ( isArray(name) ) {
         this.prototype.add.call(this, name);
         return;
     }
-    // console.log('will add', name);
+    // console.log('before addiction', name);
     var list = this.getUserList();
     // console.log('before adding', list);
     if ( list.indexOf(name) == -1  ) {
@@ -92,19 +109,36 @@ InviteStatus.prototype.add = function (name) {
 
 InviteStatus.prototype.remove = function (name) {
     var list = this.getUserList();
-    console.log('before remove', list);
+    // console.log('before remove', list);
     var index = list.indexOf( name );
     // remove list[index]
     list = list.splice(0,index).concat( list.splice(index + 1) );
-    console.log('removed', list);
+    // console.log('removed', list);
     this.updateData( list )
+}
+
+var getUserFullName = function (urlToken) {
+    // console.log('search by ', urlToken);
+    for (var i = 0, len = allUsers.length; i < len; ++i) {
+        // console.log('user', i+1, allUsers[i].urlToken, '==>', urlToken);
+        if (allUsers[i].urlToken == urlToken) {
+            console.log('find', allUsers[i]);
+            return allUsers[i].fullName;
+        }
+    }
 }
 
 var inviteStatus = new InviteStatus();
 
 // request invite_panel.json and handle it
-var xhr = new XMLHttpRequest();
-xhr.open('GET', '/invite_panel.json');
+var xhr;
+if (window.XMLHttpRequest) {
+    xhr = new XMLHttpRequest();
+} else {
+    xhr = new ActiveXObject("Microsoft.XMLHTTP")
+}
+// xhr = new XMLHttpRequest();
+xhr.open('GET', '/invite_panel.json', true);
 
 xhr.onreadystatechange = function () {
     // console.log(xhr);
@@ -127,10 +161,10 @@ xhr.onreadystatechange = function () {
             var user = allUsers[i];
             if (user.isInvited) {
                 // console.log(user, 'invited');
-                user.inviteClass = "btn-inverse retrieve-invitation";
+                user.inviteClass = RETRIEVE_BTN_CN;
                 user.inviteText = "收回邀请"
             } else {
-                user.inviteClass = "send-invitation";
+                user.inviteClass = INVITE_BTN_CLASS;
                 user.inviteText = "邀请回答"
             }
             var htmlCode = htmlTemp;
@@ -145,23 +179,10 @@ xhr.onreadystatechange = function () {
 
         inviteItemCon.appendChild( frag );
 
-        // update status
-        // var invitedUserArray = [];
-        // for (var i = 0, len = invitedUsers.length; i < len; ++i) {
-        //     var urlToken = invitedUsers[i].urlToken;
-        //     var aTagStr = ("<a href='/people/{{ urlToken }}' data-user-name='{{ urlToken }}'>{{ urlToken }}</a>")
-        //                    .replace(/{{ urlToken }}/g, urlToken)
-        //     invitedUserArray.push( aTagStr );
-        // }
         var invitedUserNames = invitedUsers.map(function(e){
             return e.urlToken;
         })
         inviteStatus.updateData(invitedUserNames);
-        // statusTag.innerHTML = "您已经邀请" + invitedUserArray.join("、") + "等" + invitedUserArray.length + "人";
-        // statusTag.setAttribute('data-invited-users', invitedUserNames.join(';'))
-        // if (!invitedUsers.length) {
-        //     statusTag.innerHTML = "您还没要邀请任何人"
-        // }
         
     }
 }
@@ -175,17 +196,16 @@ var main = function() {
     var hideConfirm = function( callback ) {
         $mask.fadeOut();
         $confirmer.fadeOut(function () {
-            // run callback if given
-            if (callback) {
-                callback();
-            }
+            // invoke callback if given
+            if (callback) callback();
         });
     };
 
 
+    // 通过 @elem
+    // 将用户名传递进来
     var showConfirm = function(elem) {
         $mask.fadeIn();
-        // 通过 @elem将用户名传递进来
         $confirmer
             .data('user-name', $(elem).data('user-name'))
             .fadeIn()
@@ -196,47 +216,51 @@ var main = function() {
     });
 
     // handle retrieve invitation
-    // ----------------------------------------
+    // --------------------------
     $('.invite-item-con').on( 'click', '.retrieve-invitation', function(){
             // console.log('click retrieve invitational');
             // console.log(this);
             // $(this).data('user-name')
             // change button's style
             if (showConfirm(this)){
-                $(this).removeClass('btn-inverse retrieve-invitation').addClass('send-invitation');
+                $(this).removeClass(RETRIEVE_BTN_CN).addClass(INVITE_BTN_CLASS);
             }
     });
 
     var showConfirm = function (elem) {
-        var userName = $(elem).parent('.invite-item').data('user-name');
+        var urlToken = $(elem).parent('.invite-item').data('user-name');
         // console.log('elem bind data',elem);
+        var fullName;
+        fullName = getUserFullName(urlToken)
         $mask.fadeIn();
         $confirmer
                 .find('p')
-                .html('确认收回对<a href="/people/' + userName + '">' + userName + '</a>' + '的邀请吗？')
+                .html('确认收回对<a href="/people/' + urlToken + '">' + fullName + '</a>' + '的邀请吗？')
             .end()
-                .find('.confirm-btn').data('user-name', userName)
+                .find('.confirm-btn').data('user-name', urlToken)
             .end()
             .fadeIn();
     }
 
     // confirm
     $(".confirmer .confirm-btn").bind("click", function () {
-        var userName = $(this).data('user-name')
+        var urlToken = $(this).data('user-name')
+        var fullName = getUserFullName(urlToken);
         hideConfirm(function () {
             // change style
-            $(".invite-item-con .invite-item[data-user-name='" + userName+ "']")
+            $(".invite-item-con .invite-item[data-user-name='" + urlToken+ "']")
             .find('.btn')
             .text('邀请回答')
-            .removeClass('btn-inverse retrieve-invitation')
-            .addClass('send-invitation');
+            .removeClass(RETRIEVE_BTN_CN)
+            .addClass(INVITE_BTN_CLASS);
 
             // update status
-            inviteStatus.remove(userName);
+            inviteStatus.remove(urlToken);
 
             // notification show up
-            $('.notification')
-                .text("已收回对" + userName + "的邀请！")
+            $notif()
+                // .text("已收回对" + fullName + "的邀请！")
+                .html("已收回对<a href='/people/" + urlToken + "'>" + fullName + "</a>的邀请！")
                 .animate({top:'5px'}, 500)
                 .delay(1500)
                 .animate({top:'-50px'}, 300);
@@ -246,40 +270,44 @@ var main = function() {
 
 
     // send invitation
-    // ----------------------------------------
+    // ---------------
     $('.invite-item-con').on('click', '.send-invitation', function(){
         // toggle className
         var that = this;
-        console.log(this, 'clicking sending button');
+        // console.log(this, 'clicking sending button');
         $(this).text("收回邀请")
-            .removeClass('send-invitation')
-            .addClass('btn-inverse retrieve-invitation')
+            .removeClass(INVITE_BTN_CLASS)
+            .addClass(RETRIEVE_BTN_CN)
             .queue();
             (function(){
-                    // show notification
-                    console.log('sending');
-                    var userName = $(that).parent('.invite-item').data('user-name');
-                    console.log(userName);
-                    inviteStatus.add(userName);
-                    $('.notification')
-                .text("已向" + userName + "发送邀请！")
-                .animate({top:'5px'}, 500)
-                .delay(1500)
-                .animate({top:'-50px'}, 300);
+                // show notification
+                // console.log('sending');
+                var urlToken = $(that).parent('.invite-item').data('user-name');
+                var fullName = getUserFullName(urlToken);
+                // console.log(urlToken);
+                inviteStatus.add(urlToken);
+                $notif()
+                    .html("已向<a href='/people/" + urlToken + "'>" + fullName + "</a>发送邀请！")
+                    .animate({top:'5px'}, 500)
+                    .delay(1500)
+                    .animate({top:'-50px'}, 300);
 
             }()); // closure
     })
 
     // handle notification
-    $("notification").hover(function () {
+    // -------------------
+    $("body").on('mouseover', '.notification', function () {
         $(this)
-            .stop()
+            .stop(true, true)
             .animate({top:'5px'}, 500);
-    },function () {
+    }).on('mouseout', '.notification', function () {
         $(this)
-            .stop()
-            .animate({top:'-50px'}, 300);
+            .stop(true, true)
+            .delay(500)
+            .animate({top:'-50px'}, 400);
     })
+
 };
 
 // invoke main function
