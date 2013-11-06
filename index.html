@@ -4,9 +4,9 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>邀请回答</title>
+        <title>邀请管理</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="description" content="invite panel">
+        <meta name="description" content="invitation management">
         <link rel="stylesheet" href="./style/lib/bootstrap.css" type="text/css" media="screen" charset="utf-8">
         <link rel="stylesheet" href="./style/invite.css" type="text/css" media="screen" charset="utf-8">
         <script src="scripts/lib/jquery.min.js" type="text/javascript" charset="utf-8"></script>
@@ -18,10 +18,7 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
                     <input class="form-control search" type="text" placeholder="搜索你想邀请到人">
                 </div>
                 <div class="span invite-status" id="invite-status">
-                    您已经邀请
-                    <a href="#">the Droidtocat</a>、
-                    <a href="#">the Mardigrastocat</a>
-                    等4人
+                    数据载入中...
                 </div>
             </div>
             <h4 class="title">推荐人选</h4>
@@ -29,24 +26,11 @@ PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
             <div class="invite-item-con">
             </div>
         </div>
-        <div class="modal fade">
-            <div class="modal-header"><button>&times</button></div>
-            <h3>收回邀请</h3>
-            <div class="modal-body">
-                <p>确认收回邀请吗？</p>
-            </div>
-            <div class="modal-footer">
-                <a class="btn" href="#">取消</a>
-                <a class="btn btn-primary" href="#">确认</a>
-            </div>
-        </div>
         <div id="confirmer" class="confirmer">
             <p>收回对{{ userName }}的邀请？</p>
             <div class="confirm-btn btn btn-primary btn-small">确认</div>
         </div>
         <div class="mask"></div>
-        <div class="debugger"></div>
-        <!-- <div class="notification btn&#45;warning"></div> -->
         <script src="./scripts/invite.js" type="text/javascript" charset="utf-8"></script>
     </body>
 </html>
