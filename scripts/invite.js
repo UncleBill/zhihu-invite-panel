@@ -25,27 +25,6 @@ var INVITE_BTN_CLASS = "send-invitation",
     RETRIEVE_BTN_CN = 'btn-inverse retrieve-invitation',
     MAX_SHOWEN_NUM = 5;         // only the first 5 people
 
-// some helper functions
-var GetByClass = function(cn) {
-    if (document.getElementsByClassName) {
-        return document.getElementsByClassName(cn);
-    } else {
-        var tags = document.getElementsByTagName("*"),
-            regexp = new RegExp("(^|\\W)" + cn + "(\\W|$)"),
-            reslut = [];
-        for (var i = 0, len = tags.length; i < len; ++i) {
-            if (regexp.test(tags[i].className)) {
-                reslut.push(tags[i]);
-            }
-        }
-        return reslut;
-    }
-}
-
-var IsArray = Array.isArray || $.isArray || function(obj) {
-        return Object.prototype.toString.call(obj) === "[object array]";
-    }
-
 Array.prototype.indexOf = Array.prototype.indexOf || function(value) {
     for (var i = 0; i < this.length; ++i) {
         if (this[i] == value) {
@@ -58,13 +37,10 @@ String.prototype.trim = Array.prototype.trim || function() {
     return this.replace(/(^\s*|\s*$)/g, '');
 }
 
-var statusTag = GetByClass('invite-status')[0];
-var inviteItemCon = GetByClass("invite-item-con")[0];
+var statusTag = $('.invite-status')[0];
 var $notif = function() {
     return $("<div class='notification btn-warning' />").appendTo($('body'));
 }
-var frag = document.createElement('div');
-frag.className = 'invite-item-con-inner';
 
 var allUsers;
 
@@ -85,7 +61,7 @@ var InviteStatus = function() {
 InviteStatus.prototype.updateData = function(data) {
     var aTags = [];
     var names;
-    if (IsArray(data)) {
+    if ($.isArray(data)) {
         this.setAttr(data.join(';'));
         names = data;
     } else {
@@ -127,12 +103,12 @@ InviteStatus.prototype.setAttr = function(datastr) {
 }
 
 InviteStatus.prototype.add = function(name) {
-    if (IsArray(name)) {
+    if ($.isArray(name)) {
         this.prototype.add.call(this, name);
         return;
     }
     var list = this.getUserList();
-    if (list.indexOf(name) == -1) {
+    if ($.inArray(name, list) === -1) {
         list.push(name);
     }
     this.updateData(list);
@@ -140,99 +116,66 @@ InviteStatus.prototype.add = function(name) {
 
 InviteStatus.prototype.remove = function(name) {
     var list = this.getUserList();
-    var index = list.indexOf(name);
+    var index = $.inArray(name, list)
     list = list.splice(0, index).concat(list.splice(index + 1));
     this.updateData(list);
 }
 
 var inviteStatus = new InviteStatus();
 
-// request invite_panel.json and handle it
-var xhr;
-if (window.XMLHttpRequest) {
-    xhr = new XMLHttpRequest();
-} else {
-    xhr = new ActiveXObject("Microsoft.XMLHTTP");
-}
-// xhr = new XMLHttpRequest();
-xhr.open('GET', '/invite_panel.json', true);
+var jsonHandler = function (data) {
+    var inviteItemCon = $(".invite-item-con");
+    inviteItemCon.innerHTML = "";
 
-xhr.onreadystatechange = function() {
-    if (xhr.readyState === 4 && xhr.status === 200) {
-        inviteItemCon.innerHTML = "";
-        var json = xhr.responseText;
-        var data = jQuery.parseJSON(json);
-
-        var invitedUsers = data.invited;
-        var recommendedUsers = data.recommended;
-        for (var i = 0, len = invitedUsers.length; i < len; ++i) {      // users had been invited
-            invitedUsers[i].isInvited = true;
-        }
-
-        allUsers = invitedUsers.concat(recommendedUsers);
-
-        for (var i = 0, len = allUsers.length; i < len; ++i) {
-            var user = allUsers[i];
-            if (user.isInvited) {
-                user.inviteClass = RETRIEVE_BTN_CN;
-                user.inviteText = "收回邀请";
-            } else {
-                user.inviteClass = INVITE_BTN_CLASS;
-                user.inviteText = "邀请回答";
-            }
-            var htmlCode = htmlTemp;
-
-            // generate innerHTML
-            for (var key in user) {
-                htmlCode = htmlCode.replace((new RegExp("{{ " + key + " }}", "g")), user[key]);
-            }
-            frag.innerHTML = frag.innerHTML + htmlCode;
-        }
-
-        inviteItemCon.appendChild(frag);
-
-        var invitedUserNames = $.map(invitedUsers, function(e) {
-            return e.urlToken;
-        });
-        inviteStatus.updateData(invitedUserNames);
-
+    var invitedUsers = data.invited;
+    var recommendedUsers = data.recommended;
+    for (var i = 0, len = invitedUsers.length; i < len; ++i) {      // users had been invited
+        invitedUsers[i].isInvited = true;
     }
-}
-// send request
-xhr.send();
 
+    allUsers = invitedUsers.concat(recommendedUsers);
+
+    $.map(allUsers, function (user) {
+        if (user.isInvited) {
+            user.inviteClass = RETRIEVE_BTN_CN;
+            user.inviteText = "收回邀请";
+        } else {
+            user.inviteClass = INVITE_BTN_CLASS;
+            user.inviteText = "邀请回答";
+        }
+        var htmlCode = htmlTemp;
+
+        // generate innerHTML
+        for (var key in user) {
+            htmlCode = htmlCode.replace((new RegExp("{{ " + key + " }}", "g")), user[key]);
+        }
+        inviteItemCon.append(htmlCode)
+    })
+
+    var invitedUserNames = $.map(invitedUsers, function(e) {
+        return e.urlToken;
+    });
+    inviteStatus.updateData(invitedUserNames);
+   
+}
+
+$.get('/invite_panel.json').done( jsonHandler );
 var main = function() {
     var $mask = $(".mask");
     var $confirmer = $(".confirmer");
 
     var getUserFullName = function(urlToken) {
-        for (var i = 0, len = allUsers.length; i < len; ++i) {
-            if (allUsers[i].urlToken == urlToken) {
-                return allUsers[i].fullName;
-            }
-        }
+        return $.grep(allUsers, function (user, i) {
+            return user.urlToken == urlToken
+        })[0].fullName;
     }
 
     var hideConfirm = function(callback) {
         $mask.fadeOut();
-        $confirmer.fadeOut(function() {
-            // invoke callback if given
-            if (callback) callback();
-        });
+        $confirmer.fadeOut( callback );
     };
 
-    // 通过 @elem
-    // 将用户名传递进来
-    var showConfirm = function(elem) {
-        $mask.fadeIn();
-        $confirmer
-            .attr('data-user-name', $(elem).attr('data-user-name'))
-            .fadeIn();
-    };
-
-    $mask.bind('click', function() {
-        hideConfirm();
-    });
+    $mask.bind( 'click', hideConfirm );
 
     // handle retrieving invitation
     // --------------------------
@@ -249,10 +192,10 @@ var main = function() {
         fullName = getUserFullName(urlToken);
         $mask.fadeIn();
         $confirmer
-            .find('p')
-            .html('确认收回对<a href="/people/' + urlToken + '">' + fullName + '</a>' + '的邀请吗？')
+                .find('p')
+                .html('确认收回对<a href="/people/' + urlToken + '">' + fullName + '</a>' + '的邀请吗？')
             .end()
-            .find('.confirm-btn').data('user-name', urlToken)
+                .find('.confirm-btn').data('user-name', urlToken)
             .end()
             .fadeIn();
     }
@@ -276,7 +219,9 @@ var main = function() {
                 .html("已收回对<a href='/people/" + urlToken + "'>" + fullName + "</a>的邀请！")
                 .animate({ top: '5px' }, 500)
                 .delay(1500)
-                .animate({ top: '-50px' }, 300);
+            .animate({ top: '-50px' }, 300, function () {
+                $(this).remove();
+            });
         });
 
     });
@@ -300,7 +245,9 @@ var main = function() {
             .html("已向<a href='/people/" + urlToken + "'>" + fullName + "</a>发送邀请！")
             .animate({ top: '5px' }, 500)
             .delay(1500)
-            .animate({ top: '-50px' }, 300);
+            .animate({ top: '-50px' }, 300, function () {
+                $(this).remove();
+            });
     });
 
     // handle notification
