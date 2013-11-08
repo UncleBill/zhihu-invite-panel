@@ -4,21 +4,21 @@
     {
       "fullName": "the Mardigrastocat",
       "urlToken": "mardigrastocat",
-      "avatarPath": "./images/Mardigrastocat.png",
+      "avatarPath": "http://octodex.github.com/images/Mardigrastocat.png",
       "bio": "Octodex",
       "id": 1
     },
     {
       "fullName": "the Kimonotocat",
       "urlToken": "kimonotocat",
-      "avatarPath": "./images/kimonotocat.png",
+      "avatarPath": "http://octodex.github.com/images/kimonotocat.png",
       "bio": "Octodex",
       "id": 2
     },
     {
       "fullName": "the Skitchtocat",
       "urlToken": "skitchtocat",
-      "avatarPath": "./images/skitchtocat.png",
+      "avatarPath": "http://octodex.github.com/images/skitchtocat.png",
       "bio": "Octodex",
       "id": 3
     }
@@ -27,28 +27,28 @@
     {
       "fullName": "the Droidtocat",
       "urlToken": "droidtocat",
-      "avatarPath": "./images/droidtocat.png",
+      "avatarPath": "http://octodex.github.com/images/droidtocat.png",
       "bio": "Octodex",
       "id": 4
     },
     {
       "fullName": "the Goretocat",
       "urlToken": "goretocat",
-      "avatarPath": "./images/goretocat.png",
+      "avatarPath": "http://octodex.github.com/images/goretocat.png",
       "bio": "Octodex",
       "id": 5
     },
     {
       "fullName": "the FIRSTocat",
       "urlToken": "firstocat",
-      "avatarPath": "./images/FIRSTocat.png",
+      "avatarPath": "http://octodex.github.com/images/FIRSTocat.png",
       "bio": "Octodex",
       "id": 6
     },
     {
       "fullName": "the Professortocat",
       "urlToken": "professortocat",
-      "avatarPath": "./images/Professortocat_v2.png",
+      "avatarPath": "http://octodex.github.com/images/Professortocat_v2.png",
       "bio": "Octodex",
       "id": 7
     }
