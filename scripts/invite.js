@@ -25,14 +25,6 @@ var INVITE_BTN_CLASS = "send-invitation",
     RETRIEVE_BTN_CN = 'btn-inverse retrieve-invitation',
     MAX_SHOWEN_NUM = 5;         // only the first 5 people
 
-Array.prototype.indexOf = Array.prototype.indexOf || function(value) {
-    for (var i = 0; i < this.length; ++i) {
-        if (this[i] === value) {
-            return i;
-        }
-    }
-}
-
 var $statusTag = $('#invite-status');
 var $notif = function() {
     return $("<div class='notification btn-warning' />").appendTo($('body'));
