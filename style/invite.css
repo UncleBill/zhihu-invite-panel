@@ -27,13 +27,6 @@
     padding: 15px 0;
     float: left;
     position: relative;
-    border: 1px solid #eee;
-    border-radius:5px;
-}
-.invite-item:hover,
-.invite-item:focus{
-    border-radius:5px;
-    border: 1px solid #ddf;
 }
 .avatar{
     height: 50px;
