@@ -184,7 +184,7 @@ if (window.XMLHttpRequest) {
     xhr = new ActiveXObject("Microsoft.XMLHTTP")
 }
 // xhr = new XMLHttpRequest();
-xhr.open('GET', '/invite_panel.json', true);
+xhr.open('GET', './invite_panel.json', true);
 
 xhr.onreadystatechange = function () {
     // console.log(xhr);
