@@ -1,3 +1,5 @@
+预览：
+[https://rawgithub.com/UncleBill/zhihu-invite-panel/master/index.html](https://rawgithub.com/UncleBill/zhihu-invite-panel/master/index.html)
 实现这个界面和交互功能，并添加必要的说明。
 
 注意：
